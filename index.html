@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Portfolio</title>
+  <meta name="description" content="A lifetime archive of my work.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Familjen Grotesk"', 'system-ui', 'sans-serif'],
+            body: ['Inter', 'system-ui', 'sans-serif']
+          },
+          colors: { paper: '#F5F6F7', ink: '#16181D', mute: '#6B7280', accent: '#2B4BFF' }
+        }
+      }
+    }
+  </script>
+  <style>
+    dialog::backdrop { background: rgba(22, 24, 29, 0.85); }
+    dialog { max-width: 100vw; max-height: 100vh; }
+    .tile-fallback { background: linear-gradient(135deg, #E4E7EC, #D3D8E0); }
+    :focus-visible { outline: 2px solid #2B4BFF; outline-offset: 3px; }
+  </style>
+</head>
+<body class="bg-paper text-ink font-body antialiased">
+
+  <header class="max-w-6xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-10">
+    <h1 id="site-name" class="font-display font-bold text-5xl sm:text-7xl tracking-tight leading-none">&nbsp;</h1>
+    <p id="site-tagline" class="mt-5 text-lg sm:text-xl text-mute max-w-xl"></p>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
+    <nav id="filters" aria-label="Filter projects" class="flex flex-wrap gap-x-6 gap-y-2 mb-8 border-b border-slate-300 pb-3"></nav>
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10"></div>
+    <p id="empty" class="hidden text-mute py-20 text-center">No projects yet. Add your first one at /admin.</p>
+  </main>
+
+  <footer class="border-t border-slate-300">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 py-12 grid gap-6 sm:grid-cols-2">
+      <p id="site-about" class="text-mute max-w-md leading-relaxed"></p>
+      <p class="sm:text-right"><a id="site-email" class="font-display font-semibold text-xl hover:text-accent" href="#"></a></p>
+    </div>
+  </footer>
+
+  <dialog id="viewer" class="m-auto w-[min(92vw,960px)] rounded-lg bg-paper p-0 overflow-hidden">
+    <div class="max-h-[92vh] overflow-y-auto">
+      <div id="viewer-media" class="bg-slate-200"></div>
+      <div class="p-6 sm:p-8">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="viewer-title" class="font-display font-semibold text-3xl"></h2>
+            <p id="viewer-meta" class="text-mute mt-1"></p>
+          </div>
+          <button id="viewer-close" type="button" class="shrink-0 rounded border border-slate-300 px-3 py-1.5 text-sm hover:border-ink">Close</button>
+        </div>
+        <p id="viewer-desc" class="mt-5 leading-relaxed max-w-prose whitespace-pre-line"></p>
+        <a id="viewer-link" class="hidden mt-5 inline-block text-accent font-medium underline underline-offset-4" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var projects = [];
+      var activeCategory = 'All';
+      var grid = document.getElementById('grid');
+      var filters = document.getElementById('filters');
+      var viewer = document.getElementById('viewer');
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text) node.textContent = text;
+        return node;
+      }
+
+      function media(project, big) {
+        if (project.image) {
+          var img = el('img', big ? 'w-full max-h-[70vh] object-contain mx-auto' : 'w-full h-full object-cover');
+          img.src = project.image;
+          img.alt = project.title || '';
+          img.loading = 'lazy';
+          return img;
+        }
+        var box = el('div', 'tile-fallback w-full h-full flex items-center justify-center font-display font-bold text-ink/30 ' + (big ? 'text-8xl py-24' : 'text-7xl'));
+        box.textContent = (project.title || '?').charAt(0).toUpperCase();
+        return box;
+      }
+
+      function openViewer(project) {
+        var m = document.getElementById('viewer-media');
+        m.innerHTML = '';
+        m.appendChild(media(project, true));
+        document.getElementById('viewer-title').textContent = project.title || '';
+        document.getElementById('viewer-meta').textContent = [project.category, project.year].filter(Boolean).join(', ');
+        document.getElementById('viewer-desc').textContent = project.description || '';
+        var link = document.getElementById('viewer-link');
+        if (project.link) {
+          link.href = project.link;
+          link.textContent = 'View project';
+          link.classList.remove('hidden');
+        } else {
+          link.classList.add('hidden');
+        }
+        viewer.showModal();
+      }
+
+      function renderGrid() {
+        grid.innerHTML = '';
+        var shown = projects.filter(function (p) {
+          return activeCategory === 'All' || p.category === activeCategory;
+        });
+        document.getElementById('empty').classList.toggle('hidden', shown.length > 0);
+        shown.forEach(function (p) {
+          var card = el('button', 'text-left group');
+          card.type = 'button';
+          var frame = el('div', 'aspect-[4/5] overflow-hidden rounded bg-slate-200');
+          frame.appendChild(media(p, false));
+          card.appendChild(frame);
+          card.appendChild(el('h3', 'font-display font-semibold text-xl mt-3 group-hover:text-accent', p.title));
+          var meta = [p.category, p.year].filter(Boolean).join(', ');
+          if (meta) card.appendChild(el('p', 'text-sm text-mute', meta));
+          card.addEventListener('click', function () { openViewer(p); });
+          grid.appendChild(card);
+        });
+      }
+
+      function renderFilters() {
+        filters.innerHTML = '';
+        var cats = ['All'];
+        projects.forEach(function (p) {
+          if (p.category && cats.indexOf(p.category) === -1) cats.push(p.category);
+        });
+        if (cats.length < 3) return;
+        cats.forEach(function (c) {
+          var b = el('button', 'pb-1 text-sm font-medium border-b-2 ' + (c === activeCategory ? 'border-ink text-ink' : 'border-transparent text-mute hover:text-ink'), c);
+          b.type = 'button';
+          b.addEventListener('click', function () {
+            activeCategory = c;
+            renderFilters();
+            renderGrid();
+          });
+          filters.appendChild(b);
+        });
+      }
+
+      document.getElementById('viewer-close').addEventListener('click', function () { viewer.close(); });
+      viewer.addEventListener('click', function (e) { if (e.target === viewer) viewer.close(); });
+
+      fetch('/content/portfolio.json', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var site = data.site || {};
+          document.getElementById('site-name').textContent = site.name || 'My Portfolio';
+          document.title = site.name || 'My Portfolio';
+          document.getElementById('site-tagline').textContent = site.tagline || '';
+          document.getElementById('site-about').textContent = site.about || '';
+          var mail = document.getElementById('site-email');
+          if (site.email) { mail.href = 'mailto:' + site.email; mail.textContent = site.email; }
+          projects = data.projects || [];
+          renderFilters();
+          renderGrid();
+        })
+        .catch(function () {
+          document.getElementById('site-name').textContent = 'My Portfolio';
+          document.getElementById('empty').textContent = 'Could not load projects.';
+          document.getElementById('empty').classList.remove('hidden');
+        });
+    })();
+  </script>
+</body>
+</html>

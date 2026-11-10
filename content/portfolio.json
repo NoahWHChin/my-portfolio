@@ -1,0 +1,26 @@
+{
+  "site": {
+    "name": "Your Name",
+    "tagline": "A lifetime archive of my work.",
+    "about": "Write a few sentences about yourself here. You can change this in the admin page.",
+    "email": "you@example.com"
+  },
+  "projects": [
+    {
+      "title": "Sample Project One",
+      "category": "Design",
+      "year": "2024",
+      "image": "",
+      "description": "This is a sample. Delete it in the admin page after you add your first real project.",
+      "link": ""
+    },
+    {
+      "title": "Sample Project Two",
+      "category": "Photography",
+      "year": "2023",
+      "image": "",
+      "description": "Another sample project.",
+      "link": ""
+    }
+  ]
+}

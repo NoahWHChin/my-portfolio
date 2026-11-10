@@ -1,0 +1,38 @@
+backend:
+  name: github
+  repo: NoahWHChin/my-portfolio
+  branch: main
+
+publish_mode: simple
+media_folder: "uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "portfolio"
+    label: "My Portfolio"
+    files:
+      - name: "portfolio"
+        label: "Site and Projects"
+        file: "content/portfolio.json"
+        fields:
+          - label: "Site Info"
+            name: "site"
+            widget: "object"
+            fields:
+              - { label: "Your Name", name: "name", widget: "string" }
+              - { label: "Tagline", name: "tagline", widget: "string", required: false }
+              - { label: "About You", name: "about", widget: "text", required: false }
+              - { label: "Email", name: "email", widget: "string", required: false }
+          - label: "Projects"
+            name: "projects"
+            widget: "list"
+            label_singular: "Project"
+            add_to_top: true
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Category", name: "category", widget: "string", required: false, hint: "Example: Photography. Projects with the same category are grouped under one filter." }
+              - { label: "Year", name: "year", widget: "string", required: false }
+              - { label: "Image", name: "image", widget: "image", required: false }
+              - { label: "Description", name: "description", widget: "text", required: false }
+              - { label: "Link", name: "link", widget: "string", required: false, hint: "Optional. Start with https://" }
